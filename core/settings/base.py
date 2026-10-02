@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
+from celery.schedules import crontab
 from dotenv import load_dotenv
 from core.settings.jazzmin import JAZZMIN_SETTINGS
 
@@ -102,6 +103,21 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'Asia/Bishkek'
+
+# Celery uses Redis as the broker/result backend by default. Override in .env as needed.
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    'admin-report-every-10-minutes': {
+        'task': 'apps.testapp.tasks.send_daily_admin_report_task',
+        'schedule': 600.0,
+    },
+    'admin-report-daily-at-0900': {
+        'task': 'apps.testapp.tasks.send_daily_admin_report_task',
+        'schedule': crontab(hour=9, minute=0),
+    },
+}
 
 USE_I18N = True
 
